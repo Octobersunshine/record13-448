@@ -18,6 +18,8 @@ pub struct CreateTrackingRequest {
     pub status: String,
     pub location: String,
     pub description: String,
+    #[serde(default)]
+    pub timestamp: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Serialize)]

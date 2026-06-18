@@ -30,20 +30,27 @@ pub async fn create_tracking(
         );
     }
 
+    let timestamp = payload.timestamp.unwrap_or_else(|| Utc::now());
+
     let event = TrackingEvent {
         id: Uuid::new_v4(),
         waybill_no: payload.waybill_no.clone(),
         status: payload.status,
         location: payload.location,
         description: payload.description,
-        timestamp: Utc::now(),
+        timestamp,
     };
 
     let mut store = state.lock().await;
-    store
+    let events = store
         .entry(payload.waybill_no.clone())
-        .or_insert_with(Vec::new)
-        .push(event.clone());
+        .or_insert_with(Vec::new);
+
+    let pos = events
+        .iter()
+        .position(|e| e.timestamp < event.timestamp)
+        .unwrap_or(events.len());
+    events.insert(pos, event.clone());
 
     (StatusCode::CREATED, Json(ApiResponse::success(event)))
 }
@@ -56,9 +63,7 @@ pub async fn get_tracking(
 
     match store.get(&waybill_no) {
         Some(events) => {
-            let mut sorted_events = events.clone();
-            sorted_events.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
-            (StatusCode::OK, Json(ApiResponse::success(sorted_events)))
+            (StatusCode::OK, Json(ApiResponse::success(events.clone())))
         }
         None => (
             StatusCode::NOT_FOUND,
