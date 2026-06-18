@@ -10,6 +10,8 @@ pub struct TrackingEvent {
     pub location: String,
     pub description: String,
     pub timestamp: DateTime<Utc>,
+    pub is_abnormal: bool,
+    pub abnormal_reason: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -20,6 +22,19 @@ pub struct CreateTrackingRequest {
     pub description: String,
     #[serde(default)]
     pub timestamp: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MarkAbnormalRequest {
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct WaybillTrackingResult {
+    pub waybill_no: String,
+    pub is_abnormal: bool,
+    pub abnormal_reason: Option<String>,
+    pub events: Vec<TrackingEvent>,
 }
 
 #[derive(Debug, Serialize)]
